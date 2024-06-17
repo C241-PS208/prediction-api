@@ -22,7 +22,7 @@ model = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
 
 @app.route("/")
 def index():
-    return f"{model}"
+    return "Endpoints: POST /predict, GET /status"
 
 @app.route("/predict", methods=["POST"])
 def predict():
