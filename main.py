@@ -7,6 +7,7 @@ from tensorflow import keras
 from keras._tf_keras.keras.preprocessing import image
 from keras._tf_keras.keras.applications.vgg16 import preprocess_input, decode_predictions, VGG16
 from PIL import Image
+import random
 
 # flask --app main.py --debug run
 
@@ -19,10 +20,23 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # ADJUST THIS TO MODEL LOCATION ON YOUR LOCAL FILES!!!!!!!!!!!!!!
 # model = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
-model = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/boyvgg.h5")
-model_boy = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/boyvgg.h5")
-# model_girl = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/girlvgg.h5")
-model_hairtype = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/hairtypesvgg.h5")
+
+# VINSEN
+# model = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/boyvgg.h5")
+# model_boy = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/boyvgg.h5")
+# # model_girl = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/girlvgg.h5")
+# model_hairtype = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/hairtypesvgg.h5")
+
+# BINTANG
+model = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
+model_boy = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
+# model_girl = VGG16(weights="D:/Semester 6/Bangkit/predict/girlvgg.h5")
+model_hairtype = VGG16(weights="D:/Semester 6/Bangkit/predict/hairtypesvgg.h5")
+
+
+male_face_shape_array = ["ovale", "rectangle", "square", "round"]
+female_face_shape_array = ["oblong", "heart", "square", "ovale", "round"]
+hair_type_array = ["straight", "wavy", "curly"]
 
 @app.route("/")
 def index():
@@ -32,7 +46,7 @@ def index():
 def predict():
     try: 
         # Gender Request Parameter
-        gender = request.args.get('gender')
+        gender = request.form.get('gender')
 
         req_image = request.files['image']
         req_image = Image.open(req_image).convert("RGB")
@@ -44,13 +58,19 @@ def predict():
 
         image_array = preprocess_input(image_array)
         
-        if gender == 'boy':
+        if gender == 'male':
+            face_shape = random.choice(male_face_shape_array)
             pred = model_boy.predict(image_array)
             decoded_pred = decode_predictions(pred, top=10)[0]
-        if gender == 'girl':
-            custom_print("monyet")
+
+        elif gender == 'female':
+            face_shape = random.choice(female_face_shape_array)
             pred = model.predict(image_array)
             decoded_pred = decode_predictions(pred, top=10)[0]
+        else:
+            return jsonify({"error": "Gender is not valid"})
+        
+        hair_type = random.choice(hair_type_array)
 
         hair_pred = model_hairtype.predict(image_array)
         decoded_pred_hair = decode_predictions(hair_pred, top=10)[0]
@@ -58,17 +78,13 @@ def predict():
         hair_result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred_hair]
         custom_print(hair_result)
 
-        # DUMMY DATA BECAUSE THE MODEL FROM ML NOT READY
-        face_shape = 'round'
-        hair_type = 'straight'
-
         hair_recomendations = hair_recomendation(gender, face_shape, hair_type)
 
         # result = [{"class": pred[1], "description": pred[2], "probability": float(pred[2])} for pred in decoded_pred]
         result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred]
 
-        return jsonify({"hair" : hair_result,
-                         "face_type": face_shape,
+        return jsonify({
+                        "face_type": face_shape,
                         "hair_type": hair_type,
                         "recommendations" : hair_recomendations})
 
@@ -91,7 +107,7 @@ def make_prediction(model, image_array):
 
 def hair_recomendation(gender, face_shape, hair_type):
     combinations = {
-        ('boy', 'round', 'straight'): [
+        ('male', 'round', 'straight'): [
             {
                 'hairstyle': 'Undercut with Comb Over',
                 'description': 'Provides a clean and sharp look that contrasts with the jawline. The sides are kept short while the top is left longer and combed over for a polished appearance.',
@@ -108,7 +124,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Textured Crop photo'
             }
         ],
-        ('boy', 'round', 'wavy'): [
+        ('male', 'round', 'wavy'): [
         {
             'hairstyle': 'Messy Quiff',
             'description': 'Adds height and texture, drawing attention upwards. This style is slightly tousled for a casual yet stylish appearance.',
@@ -125,7 +141,7 @@ def hair_recomendation(gender, face_shape, hair_type):
             'photo_url': 'URL to Curly Fringe photo'
         }
         ],
-        ('boy', 'round', 'curly'): [
+        ('male', 'round', 'curly'): [
             {
                 'hairstyle': 'Curly Top with Tapered Sides',
                 'description': 'Keeps the curls manageable and stylish. The sides are tapered short while the top is left longer to showcase natural curls.',
@@ -142,7 +158,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Curly Undercut photo'
             }
         ],
-        ('boy', 'rectangle', 'straight'): [
+        ('male', 'rectangle', 'straight'): [
             {
                 'hairstyle': 'Pompadour',
                 'description': 'Adds volume on top, balancing the face length. This style is characterized by its height and slicked-back appearance.',
@@ -159,7 +175,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Buzz Cut photo'
             }
         ],
-        ('boy', 'rectangle', 'wavy'): [
+        ('male', 'rectangle', 'wavy'): [
             {
                 'hairstyle': 'Wavy Pompadour',
                 'description': 'Combines volume and texture, ideal for a rectangular face. This style keeps the natural wave while adding height.',
@@ -176,7 +192,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Shaggy Layers photo'
             }
         ],
-        ('boy', 'rectangle', 'curly'): [
+        ('male', 'rectangle', 'curly'): [
             {
                 'hairstyle': 'Curly Pompadour',
                 'description': 'Adds height and dimension without elongating the face. The curls are styled upwards and back.',
@@ -193,7 +209,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Curly Fringe with Undercut photo'
             }
         ],
-        ('boy', 'ovale', 'straight'): [
+        ('male', 'ovale', 'straight'): [
             {
                 'hairstyle': 'Classic Taper',
                 'description': 'A timeless cut that complements the balanced proportions. The sides are tapered short, and the top is left slightly longer.',
@@ -210,7 +226,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Crew Cut photo'
             }
         ],
-        ('boy', 'ovale', 'wavy'): [
+        ('male', 'ovale', 'wavy'): [
             {
                 'hairstyle': 'Wavy Fringe',
                 'description': 'Adds texture and keeps the face looking balanced. The fringe is left longer and styled to enhance the natural wave.',
@@ -227,7 +243,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Medium Length Shag photo'
             }
         ],
-        ('boy', 'ovale', 'curly'): [
+        ('male', 'ovale', 'curly'): [
             {
                 'hairstyle': 'Curly Caesar Cut',
                 'description': 'Keeps curls tight and manageable. The hair is cut short with a slight fringe.',
@@ -244,7 +260,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Medium Length Curls with Tapered Sides photo'
             }
         ],
-        ('boy', 'square', 'straight'): [
+        ('male', 'square', 'straight'): [
             {
                 'hairstyle': 'Pompadour',
                 'description': 'Adds volume on top, balancing the face length. This style is characterized by its height and slicked-back appearance.',
@@ -261,7 +277,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Buzz Cut photo'
             }
         ],
-        ('boy', 'square', 'wavy'): [
+        ('male', 'square', 'wavy'): [
             {
                 'hairstyle': 'Wavy Pompadour',
                 'description': 'Combines volume and texture, ideal for a rectangular face. This style keeps the natural wave while adding height.',
@@ -278,7 +294,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Shaggy Layers photo'
             }
         ],
-        ('boy', 'square', 'curly'): [
+        ('male', 'square', 'curly'): [
             {
                 'hairstyle': 'Curly Pompadour',
                 'description': 'Adds height and dimension without elongating the face. The curls are styled upwards and back.',
@@ -295,7 +311,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Curly Fringe with Undercut photo'
             }
         ],
-        ('girl', 'square', 'straight'): [
+        ('female', 'square', 'straight'): [
             {
                 'hairstyle': 'Long Layers',
                 'description': 'Adds softness and movement, reducing the angularity of a square face. The layers create a cascading effect that flatters the jawline.',
@@ -312,7 +328,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Side-Swept Bangs photo'
             }
         ],
-        ('girl', 'square', 'wavy'): [
+        ('female', 'square', 'wavy'): [
             {
                 'hairstyle': 'Beach Waves',
                 'description': 'Adds a soft, tousled look that breaks up the strong lines of a square face. The natural waves create volume and movement.',
@@ -329,7 +345,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Wavy Pixie Cut photo'
             }
         ],
-        ('girl', 'square', 'curly'): [
+        ('female', 'square', 'curly'): [
             {
                 'hairstyle': 'Curly Bob',
                 'description': 'The curls add volume and texture, softening the angles of a square face. The bob length enhances the jawline while adding movement.',
@@ -346,7 +362,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Long Curly Layers photo'
             }
         ],
-        ('girl', 'heart', 'straight'): [
+        ('female', 'heart', 'straight'): [
             {
                 'hairstyle': 'Long Layers with Side Part',
                 'description': 'Adds volume at the bottom to balance the wider forehead and narrower chin. The side part softens the forehead.',
@@ -363,7 +379,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Curtain Bangs photo'
             }
         ],
-        ('girl', 'heart', 'wavy'): [
+        ('female', 'heart', 'wavy'): [
             {
                 'hairstyle': 'Textured Lob',
                 'description': 'Adds body and movement, softening the chin and balancing the forehead. The waves create a relaxed and stylish look.',
@@ -380,7 +396,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Boho Waves photo'
             }
         ],
-        ('girl', 'heart', 'curly'): [
+        ('female', 'heart', 'curly'): [
             {
                 'hairstyle': 'Curly Bob',
                 'description': 'Adds volume and balances the face by drawing attention away from the forehead. The curls create a playful and chic look.',
@@ -397,7 +413,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Curly Pixie photo'
             }
         ],
-        ('girl', 'oval', 'straight'): [
+        ('female', 'ovale', 'straight'): [
             {
                 'hairstyle': 'Long Layers',
                 'description': 'Adds softness and movement, reducing the angularity of a square face. The layers create a cascading effect that flatters the jawline.',
@@ -414,7 +430,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Side-Swept Bangs photo'
             }
         ],
-        ('girl', 'oval', 'wavy'): [
+        ('female', 'ovale', 'wavy'): [
             {
                 'hairstyle': 'Beach Waves',
                 'description': 'Adds a soft, tousled look that breaks up the strong lines of a square face. The natural waves create volume and movement.',
@@ -431,7 +447,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Wavy Pixie Cut photo'
             }
         ],
-        ('girl', 'oval', 'curly'): [
+        ('female', 'ovale', 'curly'): [
             {
                 'hairstyle': 'Curly Bob',
                 'description': 'The curls add volume and texture, softening the angles of a square face. The bob length enhances the jawline while adding movement.',
@@ -448,7 +464,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Long Curly Layers photo'
             }
         ],
-        ('girl', 'oblong', 'straight'): [
+        ('female', 'oblong', 'straight'): [
             {
                 'hairstyle': 'Long Layers',
                 'description': 'Adds volume and movement, breaking up the length of an oblong face. The layers start around the chin, creating a balanced look.',
@@ -465,7 +481,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Shoulder-Length Cut photo'
             }
         ],
-        ('girl', 'oblong', 'wavy'): [
+        ('female', 'oblong', 'wavy'): [
             {
                 'hairstyle': 'Wavy Lob',
                 'description': 'Adds volume and texture, breaking up the length of an oblong face. The waves create a soft and feminine look.',
@@ -482,7 +498,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Beach Waves photo'
             }
         ],
-        ('girl', 'oblong', 'curly'): [
+        ('female', 'oblong', 'curly'): [
             {
                 'hairstyle': 'Curly Bob',
                 'description': 'Adds volume and width, balancing the length of an oblong face. The curls create a playful and chic look.',
@@ -499,7 +515,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Long Curly Layers photo'
             }
         ],
-        ('girl', 'round', 'straight'): [
+        ('female', 'round', 'straight'): [
             {
                 'hairstyle': 'Long Layers',
                 'description': 'Adds length and balances the width of a round face. The layers start around the chin, creating a slimming effect.',
@@ -516,7 +532,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Side-Swept Bangs photo'
             }
         ],
-        ('girl', 'round', 'wavy'): [
+        ('female', 'round', 'wavy'): [
             {
                 'hairstyle': 'Textured Lob',
                 'description': 'Adds volume and movement, balancing the width of a round face. The waves create a soft and stylish look.',
@@ -533,7 +549,7 @@ def hair_recomendation(gender, face_shape, hair_type):
                 'photo_url': 'URL to Shaggy Bob photo'
             }
         ],
-        ('girl', 'round', 'curly'): [
+        ('female', 'round', 'curly'): [
             {
                 'hairstyle': 'Curly Bob',
                 'description': 'Adds volume and texture, balancing the width of a round face. The curls create a playful and chic look.',
