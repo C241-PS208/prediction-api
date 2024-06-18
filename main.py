@@ -31,11 +31,16 @@ if not os.path.exists(UPLOAD_FOLDER):
 # model_hairtype = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/hairtypesvgg.h5")
 
 # BINTANG
-model = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
-model_boy = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
+# model = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
+# model_boy = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
 # model_girl = VGG16(weights="D:/Semester 6/Bangkit/predict/girlvgg.h5")
-model_hairtype = VGG16(weights="D:/Semester 6/Bangkit/predict/hairtypesvgg.h5")
+# model_hairtype = VGG16(weights="D:/Semester 6/Bangkit/predict/hairtypesvgg.h5")
 
+# VM
+model = VGG16(weights="./models/boyvgg.h5")
+model_boy = VGG16(weights="./models/boyvgg.h5")
+# model_girl = VGG16(weights=".models/girlvgg.h5")
+model_hairtype = VGG16(weights="models/hairtypesvgg.h5")
 
 male_face_shape_array = ["ovale", "rectangle", "square", "round"]
 female_face_shape_array = ["oblong", "heart", "square", "ovale", "round"]
@@ -48,9 +53,10 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
     try: 
-        # Gender Request Parameter
+        # Gender Request Body
         gender = request.form.get('gender')
 
+        # image processing
         req_image = request.files['image']
         req_image = Image.open(req_image).convert("RGB")
         req_image = req_image.resize((224, 224))
@@ -60,7 +66,8 @@ def predict():
         image_array = np.expand_dims(image_array, axis=0) # (1, 244, 244, 3)
 
         image_array = preprocess_input(image_array)
-        
+
+        # Gender checking
         if gender == 'male':
             face_shape = random.choice(male_face_shape_array)
             pred = model_boy.predict(image_array)
@@ -68,23 +75,28 @@ def predict():
 
         elif gender == 'female':
             face_shape = random.choice(female_face_shape_array)
-            pred = model.predict(image_array)
+            pred = model.predict(image_array)                   # TODO => CHANGE MODEL WHEN FEMALEVGG IS COMPLETED
             decoded_pred = decode_predictions(pred, top=10)[0]
         else:
             return jsonify({"error": "Gender is not valid"})
         
+        # RANDOMIZER
         hair_type = random.choice(hair_type_array)
 
+
+        # PREDICTION
         hair_pred = model_hairtype.predict(image_array)
         decoded_pred_hair = decode_predictions(hair_pred, top=10)[0]
 
-        hair_result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred_hair]
-        custom_print(hair_result)
-
+        # RECOMMENDATION GENERATOR
         hair_recomendations = hair_recommendation(gender, face_shape, hair_type)
 
-        # result = [{"class": pred[1], "description": pred[2], "probability": float(pred[2])} for pred in decoded_pred]
+        # RESULT JSON
         result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred]
+        hair_result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred_hair]
+
+        print(result, file=sys.stdout)
+        print(hair_result, file=sys.stdout)
 
         return jsonify({
                         "face_type": face_shape,
@@ -92,6 +104,8 @@ def predict():
                         "recommendations" : hair_recomendations})
 
     except Exception as e:
+        print(str(e), file=sys.stdout)
+        # custom_print(str(e))
         return jsonify({"error": str(e)})
 
 @app.route("/status")
@@ -104,7 +118,7 @@ if (__name__ == "__main__"):
 def make_prediction(model, image_array):
     pred = model.predict(image_array)
     decoded_pred = decode_predictions(pred, top=5)
-    custom_print(decoded_pred)
+    # custom_print(decoded_pred)
     result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred]
     return result
 
