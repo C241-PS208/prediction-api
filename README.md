@@ -19,6 +19,12 @@ ShaveMax is a mobile application that utilized the machine learning technology t
 ## Functionality
 This Flask application is specific application that handles the prediction API of the ShaveMax Application.
 
+## Deployed Link
+Access this REST Application using this URL:
+```http
+http://35.224.249.79:5000/predict
+```
+
 ## In this Application, there is 3 endpoints:
 #### Get all available endpoints
 ```http
