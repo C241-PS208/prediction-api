@@ -48,7 +48,7 @@ request body gender (text) and image(file). This endpoint will return the face s
 ```http
   GET /status
 ```
-An endpoint with GET methodthat returns the status of current application.
+An endpoint with GET method that returns the status of current application.
 
 This application is deployed via Google Cloud Compute Engines and all the models needed is uploaded to the compute engine. Then, the applicatin will be running on the compute engine and kept alive by pm2 process manager.
 
