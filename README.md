@@ -22,7 +22,7 @@ This Flask application is specific application that handles the prediction API o
 ## Deployed Link
 Access this REST Application using this URL:
 ```http
-http://35.224.249.79:5000/predict
+http://35.224.249.79:5000
 ```
 
 ## In this Application, there is 3 endpoints:
