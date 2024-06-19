@@ -28,7 +28,7 @@ http://35.224.249.79:5000
 ## In this Application, there is 3 endpoints:
 #### Get all available endpoints
 ```http
-  GET /api/items
+  GET /
 ```
 An endpoint with GET method to return all available endpoints of the application.
 #### Predict Image
