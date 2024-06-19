@@ -25,7 +25,7 @@ This Flask application is specific application that handles the prediction API o
   GET /api/items
 ```
 An endpoint with GET method to return all available endpoints of the application.
-#### Get item
+#### Predict Image
 ```http
   POST /predict
 ```
@@ -38,7 +38,7 @@ An endpoint with GET method to return all available endpoints of the application
 An endpoint with POST method that requires 
 request body gender (text) and image(file). This endpoint will return the face shape, hair type, and hairstyle recommendations as json.
 
-#### Get item
+#### Get Status
 ```http
   GET /status
 ```
