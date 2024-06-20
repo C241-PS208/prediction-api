@@ -44,10 +44,10 @@ model = tf.keras.models.load_model("./models/boymodified.h5")
 model_boy = tf.keras.models.load_model("./models/boymodified.h5")
 model_girl = tf.keras.models.load_model("./models/girlFacevgg13.h5")
 
-model_hairtype = VGG16(weights="models/hairtypesvgg.h5")
+model_hairtype = tf.keras.models.load_model("./models/hairtype-finetune.h5")
 
 male_face_shape_array = ["ovale", "rectangle", "round", "square"]
-female_face_shape_array = ["oblong", "heart", "square", "ovale", "round"]
+female_face_shape_array = ["ovale", "oblong", "round", "square"]
 hair_type_array = ["straight", "wavy", "curly"]
 
 @app.route("/")
@@ -65,66 +65,67 @@ def predict():
         req_image = Image.open(req_image).convert("RGB")
         req_image = req_image.resize((224, 224))
         image_array = image.img_to_array(req_image)
-        image_array = np.expand_dims(image_array, axis=0) # (1, 244, 244, 3)
+        image_array = np.expand_dims(image_array, axis=0) 
         image_array = preprocess_input(image_array)
 
         predicted_classes = []
 
         # FACE SHAPE PREDICTION
         if gender == 'male':
-            face_shape = random.choice(male_face_shape_array)
             pred = model_boy.predict(image_array)
-            # decoded_pred = decode_predictions(pred, top=10)[0]
             predicted_class_indices = np.argmax(pred, axis=1)
 
-            # Ensure predicted class indices are within range of classes list
             for idx in predicted_class_indices:
                 if 0 <= idx < len(male_face_shape_array):
                     predicted_classes.append(male_face_shape_array[idx])
                 else:
-                    predicted_classes.append("Unknown")  # Handle out-of-range indices gracefully
+                    predicted_classes.append("Unknown")
+                    
         elif gender == 'female':
-            face_shape = random.choice(female_face_shape_array)
             pred = model_girl.predict(image_array)
-            # decoded_pred = decode_predictions(pred, top=10)[0]
             predicted_class_indices = np.argmax(pred, axis=1)
             print(pred)
 
-            # Ensure predicted class indices are within range of classes list
-            # TODO only resulting in 4 indices, needed 5 because girls have 5 face shapes
             for idx in predicted_class_indices:
                 if 0 <= idx < len(female_face_shape_array):
                     predicted_classes.append(female_face_shape_array[idx])
                 else:
-                    predicted_classes.append("Unknown")  # Handle out-of-range indices gracefully
+                    predicted_classes.append("Unknown")
         else:
             return jsonify({"error": "Gender is not valid"})
+        
+        # HAIR TYPE PREDICTION
+        hair_pred = model_hairtype.predict(image_array)
+
 
         # FACE SHAPE RESULT
         face_shape_result = predicted_classes[0]
 
-        # HAIR TYPE RANDOMIZER 
-        hair_type = random.choice(hair_type_array)
+        # HAIR TYPE RESULT
+        hair_type_result = None
+        if hair_pred[0][0] > 0.5:
+            hair_type_result = "curly"
+            # print("Curly Hair")
+        elif hair_pred[0][1] > 0.5:
+            hair_type_result = "straight"
+            # print("Straight Hair")
+        elif hair_pred[0][2] > 0.5:
+            hair_type_result = "wavy"
+            # print("Wavy Hair")
+        else:
+            hair_type_result = "unknown"
+            # print("Unknown")
 
 
-
-        # HAIR TYPE PREDICTION
-        # hair_pred = model_hairtype.predict(image_array)
-        # decoded_pred_hair = decode_predictions(hair_pred, top=10)[0]
 
         # RECOMMENDATION GENERATOR
-        hair_recomendations = hair_recommendation(gender, face_shape_result, hair_type)
+        hair_recomendations = hair_recommendation(gender, face_shape_result, hair_type_result)
 
         # RESULT JSON
-        # result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred]
-        # hair_result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred_hair]
-
-        return jsonify({"face_type": face_shape_result, "hair_type": hair_type, "recommendations" : hair_recomendations})
-        # return jsonify({"pred": predicted_classes[0]})
+        return jsonify({"face_type": face_shape_result, "hair_type": hair_type_result, "recommendations" : hair_recomendations})
 
     except Exception as e:
         print(str(e), file=sys.stdout)
-        # custom_print(str(e))
         return jsonify({"error": str(e)})
 
 @app.route("/status")
@@ -137,7 +138,6 @@ if (__name__ == "__main__"):
 def make_prediction(model, image_array):
     pred = model.predict(image_array)
     decoded_pred = decode_predictions(pred, top=5)
-    # custom_print(decoded_pred)
     result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred]
     return result
 
