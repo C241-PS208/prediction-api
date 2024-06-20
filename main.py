@@ -22,7 +22,6 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # ADJUST THIS TO MODEL LOCATION ON YOUR LOCAL FILES!!!!!!!!!!!!!!
-model = tf.keras.models.load_model("./models/boymodified.h5")
 model_boy = tf.keras.models.load_model("./models/boymodified.h5")
 model_girl = tf.keras.models.load_model("./models/girlFacevgg13.h5")
 
@@ -112,11 +111,6 @@ def status():
 if (__name__ == "__main__"):
     app.run(host="0.0.0.0", port="5000")
 
-def make_prediction(model, image_array):
-    pred = model.predict(image_array)
-    decoded_pred = decode_predictions(pred, top=5)
-    result = [{"class": pred[1], "probability": float(pred[2])} for pred in decoded_pred]
-    return result
 
 
 
