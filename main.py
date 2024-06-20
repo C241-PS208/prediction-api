@@ -22,24 +22,6 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # ADJUST THIS TO MODEL LOCATION ON YOUR LOCAL FILES!!!!!!!!!!!!!!
-# model = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
-
-# VINSEN
-# model = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/boyvgg.h5")
-# model_boy = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/boyvgg.h5")
-# # model_girl = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/girlvgg.h5")
-# model_hairtype = VGG16(weights="/Users/vinsensiusferdinando/Desktop/predict/hairtypesvgg.h5")
-
-# BINTANG
-# model = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
-# model_boy = VGG16(weights="D:/Semester 6/Bangkit/predict/boyvgg.h5")
-# model_girl = VGG16(weights="D:/Semester 6/Bangkit/predict/girlvgg.h5")
-# model_hairtype = VGG16(weights="D:/Semester 6/Bangkit/predict/hairtypesvgg.h5")
-
-# VM
-# model = VGG16(weights="./models/boymodified.h5")
-# model_boy = VGG16(weights="./models/boymodified.h5")
-# model_girl = VGG16(weights=".models/girlFacevgg13.h5")
 model = tf.keras.models.load_model("./models/boymodified.h5")
 model_boy = tf.keras.models.load_model("./models/boymodified.h5")
 model_girl = tf.keras.models.load_model("./models/girlFacevgg13.h5")
@@ -105,17 +87,12 @@ def predict():
         hair_type_result = None
         if hair_pred[0][0] > 0.5:
             hair_type_result = "curly"
-            # print("Curly Hair")
         elif hair_pred[0][1] > 0.5:
             hair_type_result = "straight"
-            # print("Straight Hair")
         elif hair_pred[0][2] > 0.5:
             hair_type_result = "wavy"
-            # print("Wavy Hair")
         else:
             hair_type_result = "unknown"
-            # print("Unknown")
-
 
 
         # RECOMMENDATION GENERATOR
